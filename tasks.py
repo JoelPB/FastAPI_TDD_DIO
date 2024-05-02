@@ -15,3 +15,11 @@ def precommit_install(c):
     Install pre-commit.
     """
     c.run("poetry run pre-commit install")
+
+
+@task
+def test(c):
+    """
+    Test.
+    """
+    c.run("poetry run pytest")
