@@ -23,3 +23,11 @@ def test(c):
     Test.
     """
     c.run("poetry run pytest")
+
+
+@task
+def test_matching(c, k=""):
+    """
+    Run tests matching a given expression.
+    """
+    c.run(f'poetry run pytest -s -rx -k "{k}" --pdb store ./tests/')
