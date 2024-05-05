@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import Optional
 
-from pydantic import Field, BaseModel
+from pydantic import Field, BaseModel, UUID4
 
 from store.schemas.base import BaseSchemaMixin
 
@@ -17,7 +18,9 @@ class ProductIn(ProductBase, BaseSchemaMixin):
 
 
 class ProductOut(ProductIn):
-    ...
+    id: UUID4 = Field()
+    created_at: datetime = Field()
+    updated_at: datetime = Field()
 
 
 class ProductUpdate(ProductBase):
