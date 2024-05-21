@@ -12,7 +12,7 @@ def test_schemas_return_success():
     assert product.name == "Iphone 14 Pro Max"
 
 
-def test_schemas_retur_raise():
+def test_schemas_return_raise():
     data = {"name": "Iphone 14 Pro Max", "quantity": 10, "price": 8.5}
 
     with pytest.raises(ValidationError) as err:

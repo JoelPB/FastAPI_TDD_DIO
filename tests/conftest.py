@@ -2,11 +2,14 @@ import asyncio
 from uuid import UUID
 
 import pytest
+from httpx import AsyncClient
+from fastapi import FastAPI
 
 from store.db.mongo import db_client
 from store.schemas.product import ProductIn, ProductUpdate
 from store.usecases.product import product_usecase
 from tests.factories import product_data, products_data
+from store.main import app as main_app
 
 
 @pytest.fixture(scope="session")
@@ -28,8 +31,23 @@ async def clear_collections(mongo_client):
     for collection_name in collections_names:
         if collection_name.startswith("system"):
             continue
-
         # await mongo_client.get_database()[collection_name].delete_many({})
+
+
+@pytest.fixture
+async def app(mongo_client):
+    return main_app
+
+
+@pytest.fixture
+async def client(app: FastAPI) -> AsyncClient:
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        yield ac
+
+
+@pytest.fixture
+def products_url() -> str:
+    return "/products/"
 
 
 @pytest.fixture
