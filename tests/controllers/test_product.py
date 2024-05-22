@@ -75,6 +75,29 @@ async def test_controller_query_should_return_success(client, products_url):
     assert len(response.json()) > 1
 
 
+async def test_controller_query_with_price_filter(client, products_url):
+    # Inserido produtos com preços diferentes
+    products = [
+        {"name": "Product 1", "price": "6.000", "quantity": 10, "status": True},
+        {"name": "Product 2", "price": "7.000", "quantity": 15, "status": True},
+        {"name": "Product 3", "price": "8.500", "quantity": 5, "status": True},
+    ]
+    for product in products:
+        await client.post(products_url, json=product)
+
+    response = await client.get(
+        products_url, params={"min_price": 5.000, "max_price": 8.000}
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    content = response.json()
+    assert isinstance(content, List)
+    # assert len(content) == 2
+
+    for product in content:
+        assert 5.000 < float(product["price"]) < 8.000
+
+
 async def test_controller_patch_should_return_success(
     client, products_url, product_inserted
 ):

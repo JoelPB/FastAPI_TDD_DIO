@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 import pymongo
@@ -34,8 +34,19 @@ class ProductUsecase:
 
         return ProductOut(**result)
 
-    async def query(self) -> List[ProductOut]:
-        return [ProductOut(**item) async for item in self.collection.find()]
+    async def query(
+        self, min_price: Optional[float] = None, max_price: Optional[float] = None
+    ) -> List[ProductOut]:
+        filters = {}
+        if min_price is not None:
+            filters["price"] = {"$gt": min_price}
+        if max_price is not None:
+            if "price" in filters:
+                filters["price"]["$lt"] = max_price
+            else:
+                filters["price"] = {"$lt": max_price}
+
+        return [ProductOut(**item) async for item in self.collection.find(filters)]
 
     async def update(self, id: UUID, body: ProductUpdate) -> ProductUpdateOut:
         body_dicty = body.model_dump(exclude_none=True)
