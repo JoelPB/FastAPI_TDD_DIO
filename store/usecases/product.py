@@ -7,7 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from store.db.mongo import db_client
 from store.models.product import ProductModel
 from store.schemas.product import ProductIn, ProductOut, ProductUpdate, ProductUpdateOut
-from store.core.exceptions import NotFoundExcepition
+from store.core.exceptions import NotFoundExcepition, BaseException
 
 
 class ProductUsecase:
@@ -17,10 +17,13 @@ class ProductUsecase:
         self.collection = self.database.get_collection("products")
 
     async def create(self, body: ProductIn) -> ProductOut:
-        product_model = ProductModel(**body.model_dump())
-        await self.collection.insert_one(product_model.model_dump())
+        try:
+            product_model = ProductModel(**body.model_dump())
+            await self.collection.insert_one(product_model.model_dump())
 
-        return ProductOut(**product_model.model_dump())
+            return ProductOut(**product_model.model_dump())
+        except Exception as e:
+            raise BaseException(message="Error inserting product: " + str(e))
 
     async def get(self, id=UUID) -> ProductOut:
         result = await self.collection.find_one({"id": id})

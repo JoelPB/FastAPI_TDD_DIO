@@ -1,9 +1,10 @@
 from typing import List
 
 import pytest
-
+from unittest.mock import patch
 from tests.factories import product_data
 from fastapi import status
+from store.core.exceptions import BaseException
 
 
 async def test_controller_create_should_return_success(client, products_url):
@@ -21,6 +22,19 @@ async def test_controller_create_should_return_success(client, products_url):
         "price": "8.500",
         "status": True,
     }
+
+
+async def test_controller_create_should_handle_insertion_exception(
+    client, products_url
+):
+    with patch(
+        "store.usecases.product.ProductUsecase.create",
+        side_effect=BaseException("Simulated insertion error"),
+    ):
+        response = await client.post(products_url, json=product_data())
+
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        assert response.json() == {"detail": "Simulated insertion error"}
 
 
 async def test_controller_get_should_return_success(
