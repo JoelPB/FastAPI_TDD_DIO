@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 from uuid import UUID
 
@@ -37,11 +38,17 @@ class ProductUsecase:
         return [ProductOut(**item) async for item in self.collection.find()]
 
     async def update(self, id: UUID, body: ProductUpdate) -> ProductUpdateOut:
+        body_dicty = body.model_dump(exclude_none=True)
+        body_dicty["updated_at"] = datetime.utcnow()
+
         result = await self.collection.find_one_and_update(
             filter={"id": id},
-            update={"$set": body.model_dump(exclude_none=True)},
+            update={"$set": body_dicty},
             return_document=pymongo.ReturnDocument.AFTER,
         )
+
+        if not result:
+            raise NotFoundExcepition(message=f"Product not found with filter: {id}")
 
         return ProductUpdateOut(**result)
 

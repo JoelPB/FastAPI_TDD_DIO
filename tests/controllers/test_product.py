@@ -1,10 +1,11 @@
+from datetime import datetime
 from typing import List
 
 import pytest
 from unittest.mock import patch
 from tests.factories import product_data
 from fastapi import status
-from store.core.exceptions import BaseException
+from store.core.exceptions import BaseException, NotFoundExcepition
 
 
 async def test_controller_create_should_return_success(client, products_url):
@@ -77,22 +78,44 @@ async def test_controller_query_should_return_success(client, products_url):
 async def test_controller_patch_should_return_success(
     client, products_url, product_inserted
 ):
+    # Recuperar o valor atual de updated_at antes da atualização
+    response = await client.get(f"{products_url}{product_inserted.id}")
+    initial_content = response.json()
+    initial_updated_at = initial_content["updated_at"]
+
     response = await client.patch(
         f"{products_url}{product_inserted.id}", json={"price": "7.500"}
     )
 
     content = response.json()
-    del content["created_at"]
-    del content["updated_at"]
 
     assert response.status_code == status.HTTP_200_OK
-    assert content == {
-        "id": str(product_inserted.id),
-        "name": "Iphone 14 Pro Max",
-        "quantity": 10,
-        "price": "7.500",
-        "status": True,
-    }
+    assert content["id"] == str(product_inserted.id)
+    assert content["name"] == "Iphone 14 Pro Max"
+    assert content["quantity"] == 10
+    assert content["price"] == "7.500"
+    assert content["status"] is True
+
+    # Verifica se a data de updated_at foi alterada
+    assert "updated_at" in content
+    assert content["updated_at"] != initial_updated_at
+    assert datetime.fromisoformat(content["updated_at"]) > datetime.fromisoformat(
+        initial_updated_at
+    )
+
+
+async def test_controller_patch_should_return_not_found(client, products_url):
+    with patch(
+        "store.usecases.product.ProductUsecase.update",
+        side_effect=NotFoundExcepition("Product not found"),
+    ):
+        response = await client.patch(
+            f"{products_url}4fd7cd35-a3a0-4c1f-a78d-d24aa81e7dca",
+            json={"price": "7.500"},
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.json() == {"detail": "Product not found"}
 
 
 async def test_controller_delete_should_return_no_content(

@@ -43,7 +43,10 @@ async def patch(
     body: ProductUpdate = Body(...),
     usecase: ProductUsecase = Depends(),
 ) -> ProductOut:
-    return await usecase.update(id=id, body=body)
+    try:
+        return await usecase.update(id=id, body=body)
+    except NotFoundExcepition as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message)
 
 
 @router.delete(path="/{id}", status_code=status.HTTP_204_NO_CONTENT)

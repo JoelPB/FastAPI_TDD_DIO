@@ -8,3 +8,7 @@ class BaseException(Exception):
 
 class NotFoundExcepition(BaseException):
     message = "Not Found"
+
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)
